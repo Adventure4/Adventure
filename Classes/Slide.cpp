@@ -552,16 +552,20 @@ void Slide::escape() {
 	l->setPosition(visibleSize / 2);
 	this->addChild(l, 2);
 
-	this->schedule(schedule_selector(Slide::backToMenu), 2);
+	defence = true;
+	this->unschedule(schedule_selector(Slide::update));
+	this->scheduleOnce(schedule_selector(Slide::backToMenu), 2);
 
 }
 
 void Slide::backToMenu(float f)
 {
-	auto scene = Scene::create();
+	/*auto scene = Scene::create();
 	auto *layer = HelloWorld::create();
 	scene->addChild(layer);
-	Director::getInstance()->replaceScene(scene);
+	Director::getInstance()->replaceScene(scene);*/
+
+	Director::getInstance()->popScene();
 }
 
 void Slide::gameOver() {

@@ -1,6 +1,7 @@
 #include "HelloWorldScene.h"
 #include "Slide.h"
 #include "aboutmenu.h"
+#include "Adventure.h"
 
 #pragma execution_character_set("utf-8") 
 USING_NS_CC;
@@ -79,8 +80,9 @@ bool HelloWorld::init()
 }
 
 void HelloWorld::PlayMenu(Ref *ref){
-	Scene * scene = Slide::createScene();
+	//Scene * scene = Slide::createScene();
 	//Director::getInstance()->pushScene(scene);
+	Scene * scene = Adventure::scene();
 	
 	CCTransitionScene * reScene = NULL;
 
