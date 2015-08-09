@@ -1,7 +1,7 @@
 #include "aboutmenu.h"
-
+#include "MainMenu.h"
 #include "SimpleAudioEngine.h"
-#include "HelloWorldScene.h"
+
 using namespace CocosDenshion;
 
 aboutmenu::aboutmenu() : m_world(NULL)
@@ -82,13 +82,13 @@ void aboutmenu::Exit(Ref *ref)
 	
 	this->addChild(p1);
 
-	this->schedule(schedule_selector(aboutmenu::backToMenu), 5);
+	this->schedule(schedule_selector(aboutmenu::backToMenu), 3);
 }
 
 void aboutmenu::backToMenu(float f)
 {
 	auto scene = Scene::create();
-	auto *layer = HelloWorld::create();
+	auto *layer = MainMenu::create();
 	scene->addChild(layer);
 	Director::getInstance()->replaceScene(scene);
 }

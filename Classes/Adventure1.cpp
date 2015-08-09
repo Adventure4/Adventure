@@ -1,38 +1,21 @@
 #include "Adventure1.h"
+#include "SimpleAudioEngine.h"
 
+using namespace CocosDenshion;
 
 const float SIZE_WSAD = 100.0;
 const int FONT_SIZE = 45;
 const int NUM_BLACK_HOLE = 7;
+const int heroLife[6] = { 60, 70, 80, 90, 100, 110 };
+const int heroAttack[6] = { 10, 15, 20, 25, 30, 35 };
+const int heroExp[6] = { 60, 70, 80, 90, 100, 110 };
+const int expArray[15] = {50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750};
+const int attackArray[15] = {10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80};
+//const int lifeArray[15] = { 60, 70, 90, 110, 130, 150, 180, 220, 250, 300, 330, 360, 490, 520, 550};
+const int lifeArray[15] = { 80, 90, 100, 110, 120, 130, 140, 150, 160, 170 ,180, 190, 200, 210 ,220};
+//const int lifeArray[10] = { 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 };
 
-const int HERO1_LIFE = 60;
-const int HERO1_ATTACK = 5;
-const int HERO1_EXP = 60;
-
-const int HERO2_LIFE = 70;
-const int HERO2_ATTACK = 10;
-const int HERO2_EXP = 70;
-
-const int HERO3_LIFE = 80;
-const int HERO3_ATTACK = 15;
-const int HERO3_EXP = 80;
-
-const int HERO4_LIFE = 90;
-const int HERO4_ATTACK = 20;
-const int HERO4_EXP = 90;
-
-const int HERO5_LIFE = 100;
-const int HERO5_ATTACK = 25;
-const int HERO5_EXP = 100;
-
-const int HERO6_LIFE = 110;
-const int HERO6_ATTACK = 30;
-const int HERO6_EXP = 110;
-
-const int expArray[10] = {50, 100, 150, 200, 250, 300, 350, 400, 450, 500};
-const int attackArray[10] = {10, 15, 20, 25, 30, 35, 40, 45, 50, 55};
-const int lifeArray[10] = { 50, 70, 90, 110, 130, 150, 180, 220, 250, 300};
-
+Adventure1 * Adventure1::adventure = NULL;
 
 // 最初生命值为50，攻击力为10（数值可以改），经验值为0
 
@@ -73,24 +56,26 @@ void Adventure1::move(Point direct) {
 	judge("v_hero5", nextPos);
 	judge("v_hero6", nextPos);
 	judge("v_black_hole", nextPos);
-	judge("v_destination", nextPos);
 	judge("v_random", nextPos);
 	judge("v_supply", nextPos);
+	judge("v_destination", nextPos);
 
 	int x = player->getPosition().x;
 	int y = player->getPosition().y;
-	label_life->setString((String::createWithFormat("Health Value : \n   %d", life)->getCString()));
-	//label_life->setString((String::createWithFormat("X = %d, Y = %d", x, y)->getCString()));
-	label_attack->setString((String::createWithFormat("Attack Value:\n   %d", attack)->getCString()));
-	label_level->setString((String::createWithFormat("Level:\n   %d", level)->getCString()));
-	label_exp->setString((String::createWithFormat("Experience:\n   %d", experience)->getCString()));
+
+	statusLayer->setLabelLevel(level);
+	statusLayer->setLabelAttack(attack);
+	statusLayer->setLabelExp(experience, level);
+	statusLayer->setLabelLife(life, level);
 
 	// 移动到下一位置
 	if (whether_black_hole == true) {
+		SimpleAudioEngine::getInstance()->playEffect("music/into_black_hole.wav");
 		whether_black_hole = false;
 		return;
 	}
 	//if (flag == true)
+	SimpleAudioEngine::getInstance()->playEffect("music/player_move.wav");
 	player->setPosition(nextPos);
 }
 
@@ -99,7 +84,8 @@ void Adventure1::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it1 = v_hero1.begin();
 		for (; it1 != v_hero1.end(); it1++)
 			if ((*it1)->getPosition() == nextPos) {
-				label_info->setString((String::createWithFormat("A small monster\n")->getCString()));
+				SimpleAudioEngine::getInstance()->playEffect("music/fight1.wav");
+				statusLayer->setLabelInfo("Black Widow");
 				fightJudge((*it1), 1);
 				it1 = v_hero1.erase(it1);
 				break;
@@ -109,7 +95,8 @@ void Adventure1::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it1 = v_hero2.begin();
 		for (; it1 != v_hero2.end(); it1++)
 			if ((*it1)->getPosition() == nextPos) {
-				label_info->setString((String::createWithFormat("A small monster\n")->getCString()));
+				SimpleAudioEngine::getInstance()->playEffect("music/fight1.wav");
+				statusLayer->setLabelInfo("Eagle Eye");
 				fightJudge((*it1), 2);
 				it1 = v_hero2.erase(it1);
 				break;
@@ -119,7 +106,8 @@ void Adventure1::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it1 = v_hero3.begin();
 		for (; it1 != v_hero3.end(); it1++)
 			if ((*it1)->getPosition() == nextPos) {
-				label_info->setString((String::createWithFormat("A small monster\n")->getCString()));
+				SimpleAudioEngine::getInstance()->playEffect("music/fight2.wav");
+				statusLayer->setLabelInfo("Captain America");
 				fightJudge((*it1), 3);
 				it1 = v_hero3.erase(it1);
 				break;
@@ -129,7 +117,8 @@ void Adventure1::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it1 = v_hero4.begin();
 		for (; it1 != v_hero4.end(); it1++)
 			if ((*it1)->getPosition() == nextPos) {
-				label_info->setString((String::createWithFormat("A small monster\n")->getCString()));
+				SimpleAudioEngine::getInstance()->playEffect("music/fight2.wav");
+				statusLayer->setLabelInfo("Ironman");
 				fightJudge((*it1), 4);
 				it1 = v_hero4.erase(it1);
 				break;
@@ -139,7 +128,8 @@ void Adventure1::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it1 = v_hero5.begin();
 		for (; it1 != v_hero5.end(); it1++)
 			if ((*it1)->getPosition() == nextPos) {
-				label_info->setString((String::createWithFormat("A small monster\n")->getCString()));
+				SimpleAudioEngine::getInstance()->playEffect("music/fight3.wav");
+				statusLayer->setLabelInfo("Hulk");
 				fightJudge((*it1), 5);
 				it1 = v_hero5.erase(it1);
 				break;
@@ -149,19 +139,23 @@ void Adventure1::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it1 = v_hero6.begin();
 		for (; it1 != v_hero6.end(); it1++)
 			if ((*it1)->getPosition() == nextPos) {
-				label_info->setString((String::createWithFormat("A small monster\n")->getCString()));
+				SimpleAudioEngine::getInstance()->playEffect("music/fight3.wav");
+				statusLayer->setLabelInfo("Thor");
 				fightJudge((*it1), 6);
 				it1 = v_hero6.erase(it1);
 				break;
 			}
 	}
 	
+	
+	
 	// 判断补给，恢复满血
 	if (obj == "v_supply") {
 		Vector<Sprite*>::iterator it = v_supply.begin();
 		for (; it != v_supply.end(); it++)
 			if ((*it)->getPosition() == nextPos) {
-				label_info->setString((String::createWithFormat("A space station")->getCString()));
+				SimpleAudioEngine::getInstance()->playEffect("music/cure.wav");
+				statusLayer->setLabelInfo("A space station");
 				life = lifeArray[level];
 				(*it)->removeFromParentAndCleanup(true);
 				it = v_supply.erase(it);
@@ -174,7 +168,7 @@ void Adventure1::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it = v_black_hole.begin();
 		for (; it != v_black_hole.end(); it++)
 			if ((*it)->getPosition() == nextPos) {
-				label_info->setString((String::createWithFormat("A black hole")->getCString()));
+				statusLayer->setLabelInfo("A black hole");
 				BlackHole(nextPos, 0);
 				// it = v_black_hole.erase(it);
 				break;
@@ -186,6 +180,7 @@ void Adventure1::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it = v_random.begin();
 		for (; it != v_random.end(); it++)
 			if ((*it)->getPosition() == nextPos) {
+				SimpleAudioEngine::getInstance()->playEffect("music/random.wav");
 				JumpRandom(nextPos);
 				(*it)->removeFromParentAndCleanup(true);
 				it = v_random.erase(it);
@@ -194,15 +189,10 @@ void Adventure1::judge(string obj, Point nextPos) {
 	}
 
 	// 到达虫洞终点
-	if (obj == "v_destination") {
-		Vector<Sprite*>::iterator it = v_destination.begin();
-		for (; it != v_destination.end(); it++)
-			if ((*it)->getPosition() == nextPos) {
-				ShowWin();
-				// it = v_destination.erase(it);
-				break;
-			}
-	}
+	if (obj == "v_destination")
+		if (nextPos == goal->getPosition())
+			ShowWin();
+
 }
 
 
@@ -250,19 +240,19 @@ void Adventure1::JumpRandom(Point nextPos) {
 	int i = rand() % 3;
 	if (i == 0) {
 		// 内部成员背叛，血量减少60
-		label_info->setString((String::createWithFormat("Internal betray!")->getCString()));
+		statusLayer->setLabelInfo("Internal betray!\nDecrease 60 life value.");
 		life -= 60;
 		if (life <= 0)
 			GameOver();
 	}
 	else if (i == 1) {
 		// 拾获太空水晶，攻击力增加5
-		label_info->setString((String::createWithFormat("Increase attack ability")->getCString()));
+		statusLayer->setLabelInfo("Increase 5 attack value!");
 		attack += 5;
 	}
 	else if (i == 2) {
 		// 遭遇黑洞，进入另一场景
-		label_info->setString((String::createWithFormat("A black hole")->getCString()));
+		statusLayer->setLabelInfo("A black hole!");
 		BlackHole(nextPos, 1);
 
 	}
@@ -271,38 +261,18 @@ void Adventure1::JumpRandom(Point nextPos) {
 void Adventure1::levelJudge() {
 	if (experience >= expArray[level]) {
 		experience -= expArray[level];
+		int remain = attack - attackArray[level];
 		level++;
-		attack = attackArray[level];
+		attack = attackArray[level]+remain;
 		life = lifeArray[level];
 	}
 }
 
 void Adventure1::fightJudge(Sprite* it_sprite, int num) {
 	int _life, _attack;
-	if (num == 1) {
-		_life = HERO1_LIFE;
-		_attack = HERO1_ATTACK;
-	}
-	else if (num == 2) {
-		_life = HERO2_LIFE;
-		_attack = HERO2_ATTACK;
-	}
-	else if (num == 3){
-		_life = HERO3_LIFE;
-		_attack = HERO3_ATTACK;
-	}
-	else if (num == 4){
-		_life = HERO4_LIFE;
-		_attack = HERO4_ATTACK;
-	}
-	else if (num == 5){
-		_life = HERO5_LIFE;
-		_attack = HERO5_ATTACK;
-	}
-	else if (num == 6){
-		_life = HERO6_LIFE;
-		_attack = HERO6_ATTACK;
-	}
+	_life = heroLife[num - 1];
+	_attack = heroAttack[num - 1];
+	
 	while (life > 0 && _life > 0) {
 		life -= _attack;
 		_life -= attack;
@@ -310,7 +280,9 @@ void Adventure1::fightJudge(Sprite* it_sprite, int num) {
 	if (life <= 0)
 		GameOver();
 	else if (_life <= 0) {
-		experience += HERO1_EXP;
+		experience += heroExp[num - 1];
+		String *str = String::createWithFormat("Get %d experience...", heroExp[num - 1]);
+		WarLayer::showWarWindow(this, "W I N", *str);			
 		levelJudge();
 		it_sprite->removeFromParentAndCleanup(true);
 	}
@@ -342,14 +314,24 @@ Vector <Sprite *> Adventure1::loadFromMap(TMXTiledMap* tmx, string obj, string n
 
 Scene* Adventure1::scene()
 {
-	// 'scene' is an autorelease object
+	//// 'scene' is an autorelease object
+	//auto scene = Scene::create();
+
+	//// 'layer' is an autorelease object
+	//auto *layer = Adventure1::create();
+
+	//// add layer as a child to scene
+	//scene->addChild(layer);
+
+	//// return the scene
+	//return scene;
 	auto scene = Scene::create();
 
 	// 'layer' is an autorelease object
-	auto *layer = Adventure1::create();
+	Adventure1::adventure = Adventure1::create();
 
 	// add layer as a child to scene
-	scene->addChild(layer);
+	scene->addChild(Adventure1::adventure);
 
 	// return the scene
 	return scene;
@@ -377,55 +359,46 @@ bool Adventure1::init()
 	visibleSize = Director::getInstance()->getVisibleSize();
 
 	// 背景图片可以换
-	Sprite* background = Sprite::create("background2.jpg");
-	background->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-	addChild(background, 0);
+	auto bgsprite = Sprite::create("bg5.jpg");
+	float odds;
+	float oddsY;
+	oddsY = bgsprite->getContentSize().height / visibleSize.height;
+	odds = bgsprite->getContentSize().width / visibleSize.width;
+	bgsprite->setScaleY(1 / oddsY);
+	bgsprite->setScaleX(1 / odds);
+	bgsprite->setPosition(Vec2(visibleSize / 2));
+	this->addChild(bgsprite, 0);
 
-	
-	dispatcher = Director::getInstance()->getEventDispatcher();
-	KeyboardEvent();
+	initTouchEvent();
 	
 	loadObject();
+
+	// 键盘事件
+	addKeyboardEvent();
 	
 	return true;
 }
 
 
 
+void Adventure1::initTouchEvent(){
+	auto menu = Menu::create();
+	menu->setPosition(visibleSize.width,0);
+	menu->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
+	this->addChild(menu,10);
 
+	auto label_RS = Label::createWithTTF("Restart", "fonts/Marker Felt.ttf", 35);
+	auto button_rs = MenuItemLabel::create(label_RS, CC_CALLBACK_1(Adventure1::Restart, this));
+	button_rs->setPosition(SIZE_WSAD * (-8) - 32, SIZE_WSAD * 1-15);
+	button_rs->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
+	menu->addChild(button_rs);
 
-void Adventure1::KeyboardEvent()
-{
-	auto listener = EventListenerKeyboard::create();
-
-	listener->onKeyPressed = CC_CALLBACK_2(Adventure1::onKeyPressed, this);
-	//listener->onKeyReleased = CC_CALLBACK_2(Adventure::onKeyReleased, this);
-
-	dispatcher->addEventListenerWithSceneGraphPriority(listener, this);
-}
-
-void Adventure1::onKeyPressed(EventKeyboard::KeyCode code, Event* event) {
-	switch (code)
-	{
-	case cocos2d::EventKeyboard::KeyCode::KEY_LEFT_ARROW:
-	case cocos2d::EventKeyboard::KeyCode::KEY_A:
-		onLeftPressed(this);
-		break;
-	case cocos2d::EventKeyboard::KeyCode::KEY_RIGHT_ARROW:
-	case cocos2d::EventKeyboard::KeyCode::KEY_D:
-		onRightPressed(this);
-		break;
-	case cocos2d::EventKeyboard::KeyCode::KEY_UP_ARROW:
-	case cocos2d::EventKeyboard::KeyCode::KEY_W:
-		onUpPressed(this);
-		break;
-	case cocos2d::EventKeyboard::KeyCode::KEY_DOWN_ARROW:
-	case cocos2d::EventKeyboard::KeyCode::KEY_S:
-		onDownPressed(this);
-		break;
-	default:
-		break;
-	}
+	// 载入上一张地图存储的属性值
+	Global * global = Global::getInstance();
+	life = global->getLife();
+	attack = global->getAttack();
+	experience = global->getExperience();
+	level = global->getLevel();
 }
 
 void Adventure1::loadObject(){
@@ -435,7 +408,7 @@ void Adventure1::loadObject(){
 	tmx->setPosition(visibleSize.width / 2, visibleSize.height / 2);
 	//设置锚点
 	tmx->setAnchorPoint(Vec2(0.5, 0.5));
-	int DisX = (visibleSize.width - tmx->getContentSize().width) / 2 - 64 * 5;
+	int DisX = (visibleSize.width - tmx->getContentSize().width) / 2 - 64 * 2.5;
 	int DisY = (visibleSize.height - tmx->getContentSize().height) / 2 - 64 * 4;
 	//添加到游戏图层中，其中0代表Z轴（Z轴低的会被高的遮挡）
 	this->addChild(tmx, 0);
@@ -458,43 +431,62 @@ void Adventure1::loadObject(){
 		this->addChild(temp, 5);
 	}
 
+	TMXObjectGroup* object2 = tmx->getObjectGroup("destination");
+	//从对象层中获取对象数组
+	ValueVector container2 = object2->getObjects();
+	//遍历对象
+	for (auto obj : container2){
+		ValueMap values = obj.asValueMap();
+		//获取纵横轴坐标（cocos2dx坐标）
+		x = values.at("x").asInt();
+		y = values.at("y").asInt();
+		Sprite* temp = Sprite::create("goal.png");
+		temp->setAnchorPoint(Vec2(0, 0));
+		temp->setPosition(Point(x + DisX, y + DisY));
+		goal = temp;
+		this->addChild(temp, 1);
+	}
+
+	// 显示生命值/攻击力/经验值的图像
+	Sprite* label_life = Sprite::create("label_life.png");
+	label_life->setPosition(55, 64 * 6 - 10);
+	addChild(label_life, 7);
+	Sprite* label_attack = Sprite::create("label_attack.png");
+	label_attack->setPosition(55, 64 * 5);
+	addChild(label_attack, 7);
+	Sprite* label_level = Sprite::create("label_level.png");
+	label_level->setPosition(55, 64 * 4 + 18);
+	addChild(label_level, 7);
+	Sprite* label_exp = Sprite::create("label_exp.png");
+	label_exp->setPosition(55, 64 * 3 + 30);
+	addChild(label_exp, 7);
+
 	// 导入对象后存入对应的vector中
-	v_wall = loadFromMap(tmx, "wall", "wall.png", DisX, DisY);
+	v_wall = loadFromMap(tmx, "wall", "floor.png", DisX, DisY);
 	v_hero1 = loadFromMap(tmx, "blackwidow", "6.png", DisX, DisY);
 	v_hero2 = loadFromMap(tmx, "eagleeye", "5.png", DisX, DisY);
 	v_hero3 = loadFromMap(tmx, "captain", "4.png", DisX, DisY);
 	v_hero4 = loadFromMap(tmx, "ironman", "3.png", DisX, DisY);
 	v_hero5 = loadFromMap(tmx, "hulk", "2.png", DisX, DisY);
 	v_hero6 = loadFromMap(tmx, "thor", "1.png", DisX, DisY);
-	v_black_hole = loadFromMap(tmx, "black_hole", "black_hole.jpg", DisX, DisY);
+	v_black_hole = loadFromMap(tmx, "black_hole", "black_hole.png", DisX, DisY);
 	v_destination = loadFromMap(tmx, "worm_hole", "worm_stone.png", DisX, DisY);
-	v_random = loadFromMap(tmx, "random", "random.jpg", DisX, DisY);
-	v_supply = loadFromMap(tmx, "supply", "supply_space.jpg", DisX, DisY);
+	v_random = loadFromMap(tmx, "random", "random.png", DisX, DisY);
+	v_supply = loadFromMap(tmx, "supply", "supply_space.png", DisX, DisY);
 	
-	label_info = Label::createWithTTF((String::createWithFormat("Warrior, forward to\nthe unknown.")->getCString()),
-		"fonts/Marker Felt.ttf", 20);
-	label_info->setPosition(visibleSize.width / 2 - 400, visibleSize.height / 2 + 120);
-	this->addChild(label_info, 4);
-
-	label_life = Label::createWithTTF((String::createWithFormat("Health Value:\n   %d", life)->getCString()),
-		"fonts/Marker Felt.ttf", 20);
-	label_life->setPosition(visibleSize.width / 2 - 400, visibleSize.height / 2 + 60);
-	this->addChild(label_life, 4);
-
-	label_attack = Label::createWithTTF((String::createWithFormat("Attack Value:\n   %d", attack)->getCString()),
-		"fonts/Marker Felt.ttf", 20);
-	label_attack->setPosition(visibleSize.width / 2 - 400, visibleSize.height / 2);
-	this->addChild(label_attack, 4);
-
-	label_level = Label::createWithTTF((String::createWithFormat("Level:\n   %d", level)->getCString()),
-		"fonts/Marker Felt.ttf", 20);
-	label_level->setPosition(visibleSize.width / 2 - 420, visibleSize.height / 2 - 60);
-	this->addChild(label_level, 4);
-
-	label_exp = Label::createWithTTF((String::createWithFormat("Experience:\n   %d", experience)->getCString()),
-		"fonts/Marker Felt.ttf", 20);
-	label_exp->setPosition(visibleSize.width / 2 - 400, visibleSize.height / 2 - 120);
-	this->addChild(label_exp, 4);
+	statusLayer = StatusLayer::createLayer();
+	statusLayer->setLabelInfo("hello");
+	statusLayer->setLabelLevel(level);
+	statusLayer->setLabelAttack(attack);
+	statusLayer->setLabelExp(experience, level);
+	statusLayer->setLabelLife(life, level);
+	statusLayer->setOpacity(0.5);
+	statusLayer->setContentSize(Size(300, 300));
+	statusLayer->setBackground("layers/InfoLayer.png");
+	statusLayer->setCascadeOpacityEnabled(true);
+	statusLayer->setOpacity(255 * 0.6);
+	statusLayer->setPosition(statusLayer->getContentSize().width / 2, visibleSize.height / 2);
+	this->addChild(statusLayer, 5);
 }
 
 void Adventure1::onRightPressed(Ref* sender)
@@ -538,20 +530,52 @@ void Adventure1::Restart(Ref* sender) {
 }
 
 void Adventure1::ShowWin() {
-	// 简单存取
-
-	/*if (count < database->getIntegerForKey("min_step") || database->getIntegerForKey("min_step")== 0)
-		database->setIntegerForKey("min_step", count);
-	label_life->setString((String::createWithFormat("Current step:\n   %d", count)->getCString()));
-
-	auto label_win = Label::createWithTTF("You win!", "fonts/Marker Felt.ttf", FONT_SIZE);
-
-	label_win->setPosition(visibleSize.width / 2, visibleSize.height / 2);
-
-	this->addChild(label_win,4);*/
+	// 弹出胜利对话框，可以选择重新开始
+	DialogLayer::showDialogLayer(this, "THE END\nHero, you save the earth!!", "Restart", menu_selector(Adventure1::playAgain1), "Quit", menu_selector(Adventure1::endGame), DialogLayer::STATUS::WIN);
 }
 
 void Adventure1::GameOver() {
 	// 弹出失败对话框，可以选择重新开始
+	DialogLayer::showDialogLayer(this, "L O S E ! ! !", "Restart", menu_selector(Adventure1::playAgain2), "Quit", menu_selector(Adventure1::endGame));
+}
 
+void Adventure1::keyPressed(EventKeyboard::KeyCode keyCode, Event *event) {
+	if (keyCode == EventKeyboard::KeyCode::KEY_A || keyCode == EventKeyboard::KeyCode::KEY_CAPITAL_A || keyCode == EventKeyboard::KeyCode::KEY_LEFT_ARROW) {
+		onLeftPressed(this);
+	}
+	else if (keyCode == EventKeyboard::KeyCode::KEY_D || keyCode == EventKeyboard::KeyCode::KEY_CAPITAL_D || keyCode == EventKeyboard::KeyCode::KEY_RIGHT_ARROW) {
+		onRightPressed(this);
+	}
+	else if (keyCode == EventKeyboard::KeyCode::KEY_W || keyCode == EventKeyboard::KeyCode::KEY_CAPITAL_W || keyCode == EventKeyboard::KeyCode::KEY_UP_ARROW) {
+		onUpPressed(this);
+	}
+	else if (keyCode == EventKeyboard::KeyCode::KEY_S || keyCode == EventKeyboard::KeyCode::KEY_CAPITAL_S || keyCode == EventKeyboard::KeyCode::KEY_DOWN_ARROW) {
+		onDownPressed(this);
+	}
+}
+void Adventure1::keyRelease(EventKeyboard::KeyCode keyCode, Event *event) {
+
+}
+
+void Adventure1::addKeyboardEvent() {
+	auto keyboardListener = EventListenerKeyboard::create();
+	keyboardListener->onKeyPressed = CC_CALLBACK_2(Adventure1::keyPressed, this);
+	keyboardListener->onKeyReleased = CC_CALLBACK_2(Adventure1::keyRelease, this);
+	Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(keyboardListener, this);
+}
+
+// 从第一关开始，用于游戏胜利后
+void Adventure1::playAgain1(Ref *ref) {
+	Scene * scene = Adventure::scene();
+	Director::getInstance()->replaceScene(scene);
+}
+
+// 从第二关开始，用于游戏失败时
+void Adventure1::playAgain2(Ref *ref) {
+	Scene * scene = Adventure1::scene();
+	Director::getInstance()->replaceScene(scene);
+}
+
+void Adventure1::endGame(Ref * ref) {
+	Director::getInstance()->end();
 }

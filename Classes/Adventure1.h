@@ -4,7 +4,11 @@
 #include "cocos2d.h"
 #include "Slide.h"
 #include "Adventure.h"
-#include"Global.h"
+#include "Global.h"
+#include "DialogLayer.h"
+#include "StatusLayer.h"
+#include "Infolayer.h"
+#include "WarLayer.h"
 #include <string>
 #include <stdio.h> 
 #include <iostream> 
@@ -53,8 +57,6 @@ public:
 	Vector < Sprite * > v_supply;
 
 	void initTouchEvent();
-	void KeyboardEvent();
-	void onKeyPressed(EventKeyboard::KeyCode code, Event* event);
 
 	void loadObject();
 
@@ -80,25 +82,32 @@ public:
 
 	bool win;
 
-private:
+	// 键盘事件
+	void addKeyboardEvent();
+	void keyPressed(EventKeyboard::KeyCode keyCode, Event *event);
+	void keyRelease(EventKeyboard::KeyCode keyCode, Event *enent);
+	static void resumeEventListener();
+	// 模态窗口函数
+	void playAgain1(Ref *ref);
+	void playAgain2(Ref *ref);
+	void endGame(Ref * ref);
+
+protected:
+	static Adventure1 * adventure;
 	Size visibleSize;
 	int reach_count = 0;
 	Sprite* player = NULL;
+	Sprite* goal = NULL;
+	Sprite* label_life = NULL;
+	Sprite* label_attack = NULL;
 
-	EventDispatcher* dispatcher;
+	StatusLayer *  statusLayer;
 
-	int life = 100;
-	int level = 3;
-	int attack = 25;
-	int experience = 0;
+	int life;
+	int level;
+	int attack;
+	int experience;
 	bool whether_black_hole = false;
-
-	Label* label_info;
-	// 显示生命值和攻击力的标签
-	Label* label_life;
-	Label* label_attack;
-	Label* label_level;
-	Label* label_exp;
 };
 
 #endif

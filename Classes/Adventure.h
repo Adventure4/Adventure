@@ -4,6 +4,12 @@
 #include "cocos2d.h"
 #include "Slide.h"
 #include "Global.h"
+#include "DialogLayer.h"
+#include "StatusLayer.h"
+#include "Infolayer.h"
+#include "WarLayer.h"
+//#include "SkillLayer.h"
+
 #include <string>
 #include <stdio.h> 
 #include <iostream> 
@@ -50,11 +56,9 @@ public:
 	Vector < Sprite * > v_random;
 	Vector < Sprite * > v_supply;
 
-	void KeyboardEvent();
-	void onKeyPressed(EventKeyboard::KeyCode code, Event* event);
+	void initTouchEvent();
 
 	void loadObject();
-	void info(float dt);
 
 	// 将导入对象的操作封装起来的函数
 	Vector <Sprite *> loadFromMap(TMXTiledMap* tmx, string obj, string name, int DisX, int DisY);
@@ -78,31 +82,39 @@ public:
 	int getExp() { return experience; };
 	
 	void Restart(Ref* sender);
-	void ShowWin();
+	void NextMap();
 	void GameOver();
 
 	bool win;
 
+	// 键盘事件
+	void addKeyboardEvent();
+	void keyPressed(EventKeyboard::KeyCode keyCode, Event *event);
+	void keyRelease(EventKeyboard::KeyCode keyCode, Event *enent);
+	//EventListenerKeyboard * getKeyboardListener();
+	// 键盘事件恢复
+	static void resumeEventListener();
+	// 模态窗口函数
+	void playAgain(Ref *ref);
+	void endGame(Ref * ref);
+
+
 protected:
+	static Adventure * adventure;
 	Size visibleSize;
 	int reach_count = 0;
 	Sprite* player = NULL;
+	
 
-	EventDispatcher* dispatcher;
+	StatusLayer *  statusLayer;
 
-	int life = 60;
-	int level = 1;
+	int life = 80;
+	//int life = 10000;
+	int level = 0;
 	int attack = 10;
 	int experience = 0;
 	bool whether_black_hole = false;
-	//bool is_info = false;
-
-	Label* label_info;
-	// 显示生命值和攻击力的标签
-	Label* label_life;
-	Label* label_attack;
-	Label* label_level;
-	Label* label_exp;
+	EventListenerKeyboard * keyboardListener;
 };
 
 #endif

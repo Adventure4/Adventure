@@ -1,7 +1,8 @@
+
+
 #include "DialogLayer.h"
 
-#include "SimpleAudioEngine.h"
-using namespace CocosDenshion;
+DialogLayer * DialogLayer::dialogLayer = NULL;
 
 DialogLayer::DialogLayer()
 {
@@ -9,6 +10,7 @@ DialogLayer::DialogLayer()
 
 DialogLayer::~DialogLayer()
 {
+	DialogLayer::dialogLayer = NULL;
 }
 
 DialogLayer * DialogLayer::createLayer() {
@@ -32,38 +34,13 @@ bool DialogLayer::init()
 
 void DialogLayer::initDialog()
 {
-    CCSize winSize = CCDirector::sharedDirector()->getWinSize();
-	Vec2 origin = Director::getInstance()->getVisibleOrigin();
-
-	Sprite* bg = Sprite::create("dia.jpg");
-	bg->setPosition(ccp(winSize.width / 2, winSize.height / 2));
-	this->addChild(bg, 0);
-    
-    CCMenuItemFont *exitMenuItem = CCMenuItemFont::create("Quit", this, menu_selector(DialogLayer::okMenuItemCallback));
-	exitMenuItem->setPosition(ccp(winSize.width / 2, winSize.height / 2 - 50));
-	exitMenuItem->setFontSize(80);
-    
-    CCMenuItemFont *retryMenuItem = CCMenuItemFont::create("Retry", this, menu_selector(DialogLayer::cancelMenuItemCallback));
-	retryMenuItem->setPosition(ccp(winSize.width / 2, winSize.height / 2 + 50));
-	retryMenuItem->setFontSize(54);
-    
-    m_pMenu = CCMenu::create(exitMenuItem, retryMenuItem, NULL);
-    m_pMenu->setPosition(Point::ZERO);
-    this->addChild(m_pMenu,1);
-
-	EventListenerTouchOneByOne * listener = EventListenerTouchOneByOne::create();
-	listener->onTouchBegan = [](Touch *, Event *)
-	{
-		return true;
-	};
-	listener->setSwallowTouches(true);
-	Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, this);
+	m_pMenu = Menu::create(NULL);
 }
 
 void DialogLayer::onEnter()
 {
     CCLayerColor::onEnter();
-
+    //CCTouchDispatcher::sharedDispatcher()->addTargetedDelegate(this, kCCMenuTouchPriority - 1, true);
 }
 
 void DialogLayer::onExit()
@@ -102,23 +79,73 @@ void DialogLayer::onTouchCancelled(cocos2d::CCTouch *pTouch, cocos2d::CCEvent *p
     }
 }
 
-void DialogLayer::okMenuItemCallback(cocos2d::CCObject *pSender)
-{
-    // 点击确定就退出（拷贝的原有方法）
-    CCDirector::sharedDirector()->end();
-    
-#if (CC_TARGET_PLATFORM == CC_PLATFORM_IOS)
-	exit(0);
-#endif
+void DialogLayer::showDialogLayer(Layer *layer, String title, String leftString, SEL_MenuHandler leftHandler, String rightString, SEL_MenuHandler rightHandler, DialogLayer::STATUS status) {
+	if (dialogLayer != NULL) {
+		dialogLayer->removeFromParentAndCleanup(true);
+		//dialogLayer = NULL;
+	}
+
+	dialogLayer = DialogLayer::create();
+
+	Size winSize = Director::getInstance()->getWinSize();
+
+	
+	
+	LabelTTF *label = LabelTTF::create(title.getCString(), "", 48);
+	label->setPosition(ccp(winSize.width / 2, winSize.height / 2 + 50));
+	dialogLayer->addChild(label);
+
+	MenuItemFont *leftMenuItem;
+	MenuItemFont *rightMenuItem;
+	Menu * m_pMenu = dialogLayer->getMenu();
+
+	if (leftHandler != NULL) {
+		leftMenuItem = MenuItemFont::create(leftString.getCString(), dialogLayer, leftHandler);
+		leftMenuItem->setPosition(Point(winSize.width / 2 - 100, winSize.height / 2 - 50));
+		m_pMenu->addChild(leftMenuItem);
+	}
+	if (rightHandler != NULL) {
+		rightMenuItem = MenuItemFont::create(rightString.getCString(), dialogLayer, rightHandler);
+		rightMenuItem->setPosition(Point(winSize.width / 2 + 100, winSize.height / 2 - 50));
+		m_pMenu->addChild(rightMenuItem);
+	}
+	m_pMenu->setPosition(Point::ZERO);
+	dialogLayer->addChild(m_pMenu);
+	
+	Sprite *sprite_win;
+
+	switch (status) {
+	case DialogLayer::STATUS::WIN:
+		sprite_win = Sprite::create("layers/win.png");
+		sprite_win->setPosition(Point(winSize.width / 2, winSize.height / 2 + 200));
+		dialogLayer->addChild(sprite_win, 2);
+		break;
+	case DialogLayer::STATUS::FAIL:
+		sprite_win = Sprite::create("layers/fail.png");
+		sprite_win->setPosition(Point(winSize.width / 2, winSize.height / 2 + 200));
+		dialogLayer->addChild(sprite_win, 2);
+		break;
+	case DialogLayer::STATUS::NONE:
+		break;
+	default:
+		break;
+	}
+	
+	
+	EventListenerTouchOneByOne * listener = EventListenerTouchOneByOne::create();
+	listener->onTouchBegan = [](Touch *, Event *)
+	{
+		return true;
+	};
+	listener->setSwallowTouches(true);
+	Director::getInstance()->getEventDispatcher()->addEventListenerWithSceneGraphPriority(listener, dialogLayer);
+
+	layer->addChild(dialogLayer, 10);
+	//layer->getKeyboardListener();
+	Director::getInstance()->getEventDispatcher()->pauseEventListenersForTarget(layer);
 }
 
-void DialogLayer::cancelMenuItemCallback(cocos2d::CCObject *pSender)
-{
-	
-	SimpleAudioEngine::getInstance()->stopBackgroundMusic();
-	//Director::getInstance()->popScene();
-	auto scene = Scene::create();
-	auto *layer = HelloWorld::create();
-	scene->addChild(layer);
-	Director::getInstance()->replaceScene(scene);
+
+Menu* DialogLayer::getMenu() {
+	return m_pMenu;
 }

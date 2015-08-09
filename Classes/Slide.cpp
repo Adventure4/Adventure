@@ -1,11 +1,12 @@
 #include "Slide.h"
-#include "DialogLayer.h"
-
 #include <string>
 using namespace std;
-
 #include "SimpleAudioEngine.h"
+
 using namespace CocosDenshion;
+
+//test
+//Slide * Slide::slide = NULL;
 
 Slide::Slide() : m_world(NULL)
 {
@@ -14,27 +15,28 @@ Slide::Slide() : m_world(NULL)
 
 Slide::~Slide()
 {
-
+	//Slide::slide = NULL;
 }
 
 Scene* Slide::createScene()
 {
 	Scene* scene = Scene::createWithPhysics();
-	
 	scene->getPhysicsWorld()->setGravity(Point(0, 0));
-	auto layer = Slide::create(scene->getPhysicsWorld());
+	Layer* layer = Slide::create(scene->getPhysicsWorld());
 	scene->addChild(layer);
-
 	return scene;
 }
 
 Slide* Slide::create(PhysicsWorld* world)
 {
-	Slide* pRet = new Slide();
+	Slide* pRet = new(std::nothrow) Slide();
+	//Slide * pRet = Slide::init();
 	if (pRet && pRet->init(world))
 	{
+		pRet->autorelease();
 		return pRet;
 	}
+	delete pRet;
 	pRet = NULL;
 	return NULL;
 }
@@ -46,49 +48,40 @@ bool Slide::init(PhysicsWorld* world)
 		return false;
 	}
 	defence = false;
-	difficalty = 0.2;
-	moveTimes = 10;
-	bleed = 100;
+	difficalty = CCRANDOM_0_1() / 2 + 0.2; 
+	moveTimes = 3;
+	bleed = 300;
 	timesNow = 0.0;
-	timeLeft = 10;
+	timeLeft = 30;
 	bomb = 0;
 	shel = 0;
-	//SimpleAudioEngine::getInstance()->playBackgroundMusic("game.wav", true);
+	SimpleAudioEngine::getInstance()->playBackgroundMusic("game.wav", true);
 	visibleSize = Director::getInstance()->getVisibleSize();
 
 	m_world = world;
 	dispatcher = Director::getInstance()->getEventDispatcher();
-	/*isCut = false;
-	oldPos = Point(Director::getInstance()->getVisibleSize().width / 2, 0);*/
+	isCut = false;
+	oldPos = Point(Director::getInstance()->getVisibleSize().width / 2, 0);
 
-	bleedLabel = Label::createWithTTF("Your bleed: 100", "fonts/Marker Felt.ttf", 40);
-	bleedLabel->setColor(Color3B::GREEN);
-	bleedLabel->setPosition(Point(20, visibleSize.height - 20));
-	this->addChild(bleedLabel, 1);
+	
+	leftTimeLayer = LeftTimeLayer::create();
+	leftTimeLayer->setCascadeOpacityEnabled(true);
+	leftTimeLayer->setOpacity(255 * 0.6);
+	this->addChild(leftTimeLayer, 5);
 
-	moveNumLabel = Label::createWithTTF("Left move times: 10", "fonts/Marker Felt.ttf", 40);
-	moveNumLabel->setColor(Color3B::ORANGE);
-	moveNumLabel->setPosition(Point((visibleSize.width - moveNumLabel->getWidth()) / 2, visibleSize.height - 20));
-	this->addChild(moveNumLabel, 1);
-
-	timeLabel = Label::createWithTTF("Left time: 10", "fonts/Marker Felt.ttf", 40);
-	timeLabel->setColor(Color3B::BLUE);
-	timeLabel->setPosition(Point(visibleSize.width - timeLabel->getWidth() - 100, visibleSize.height - 20));
-	this->addChild(timeLabel, 1);
-
-	bombLabel = Label::createWithTTF("Bomb left: 0", "fonts/Marker Felt.ttf", 40);
-	bombLabel->setColor(Color3B::GREEN);
-	bombLabel->setPosition(Point(40, 20));
-	this->addChild(bombLabel, 1);
-
-	shelLabel = Label::createWithTTF("shel left: 0", "fonts/Marker Felt.ttf", 40);
-	shelLabel->setColor(Color3B::GREEN);
-	shelLabel->setPosition(Point(visibleSize.width - 80, 20));
-	this->addChild(shelLabel, 1);
-
-	auto bgsprite = Sprite::create("background.jpg");
-	bgsprite->setPosition(Point(visibleSize.width / 2, visibleSize.height / 2));
+	char bgpath[20];
+	int r = (int)(CCRANDOM_0_1() * 100) % 5;
+	sprintf(bgpath, "black_hole_bg%d.jpg", r);
+	auto bgsprite = Sprite::create(bgpath);
+	bgsprite->setPosition(visibleSize / 2);
+	bgsprite->setScale(visibleSize.width / bgsprite->getContentSize().width, visibleSize.height / bgsprite->getContentSize().height);
 	this->addChild(bgsprite, 0);
+
+	auto ps = ParticleSystemQuad::create("black_hole.plist");
+	ps->setPosition(visibleSize / 2);
+	this->addChild(ps);
+	playEffect();
+	//ps->release();
 
 	player = Sprite::create("player2.png");
 	player->setAnchorPoint(Vec2(0.5, 0.5));
@@ -100,19 +93,19 @@ bool Slide::init(PhysicsWorld* world)
 	player->getPhysicsBody()->setAngularVelocityLimit(0);
 	addChild(player);
 
-	Node* ground = Node::create();
+	auto ground = Node::create();
 	ground->setPhysicsBody(PhysicsBody::createEdgeSegment(Vec2(0, 0), Vec2(visibleSize.width, 0)));
 	ground->getPhysicsBody()->setDynamic(false);
 	addChild(ground);
-	Node* ground2 = Node::create();
+	auto ground2 = Node::create();
 	ground2->setPhysicsBody(PhysicsBody::createEdgeSegment(Vec2(0, 0), Vec2(0, visibleSize.height)));
 	ground2->getPhysicsBody()->setDynamic(false);
 	addChild(ground2);
-	Node* ground3 = Node::create();
+	auto ground3 = Node::create();
 	ground3->setPhysicsBody(PhysicsBody::createEdgeSegment(visibleSize, Vec2(visibleSize.width, 0)));
 	ground3->getPhysicsBody()->setDynamic(false);
 	addChild(ground3);
-	Node* ground4 = Node::create();
+	auto ground4 = Node::create();
 	ground4->setPhysicsBody(PhysicsBody::createEdgeSegment(visibleSize, Vec2(0, visibleSize.height)));
 	ground4->getPhysicsBody()->setDynamic(false);
 	addChild(ground4);
@@ -123,38 +116,60 @@ bool Slide::init(PhysicsWorld* world)
 	playBgm();
 
 	TouchEvent();
-	//testCustomEvent();
-
 	testKeyboardEvent();
-	//testMouseEvent();
-
-	//testAccelerationEvent();
 	testOntouch();
+
+	// 添加技能工具箱
+	skillToolLayer = SkillToolLayer::create();
+	skillToolLayer->setLabelInstanceMove(moveTimes);
+	skillToolLayer->setCascadeOpacityEnabled(true);
+	skillToolLayer->setOpacity(255 * 0.6);
+	this->addChild(skillToolLayer, 5);
+
+	// 添加生命层
+	lifeLayer = LifeLayer::create();
+	lifeLayer->setBloodPercentage(bleed);
+	this->addChild(lifeLayer, 5);
+	// 添加时间条
+
 	return true;
 }
 
 void Slide::preloadMusic()
 {
-	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("music/bgm.mp3");
-	//SimpleAudioEngine::getInstance()->preloadEffect("music/shoot.mp3");
+	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("music/bg_music0.mp3");
+	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("music/bg_music1.mp3");
+	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("music/bg_music2.mp3");
+	SimpleAudioEngine::getInstance()->preloadBackgroundMusic("music/bg_music3.mp3");
+	SimpleAudioEngine::getInstance()->preloadEffect("music/explore.wav");
+	SimpleAudioEngine::getInstance()->preloadEffect("music/shel.wav");
 }
 
 void Slide::playBgm()
 {
-	SimpleAudioEngine::getInstance()->playBackgroundMusic("music/bgm.mp3", true);
+	if (difficalty > 0.6)
+		SimpleAudioEngine::getInstance()->playBackgroundMusic("music/bg_music3.mp3", true);
+	else if (difficalty > 0.5)
+		SimpleAudioEngine::getInstance()->playBackgroundMusic("music/bg_music2.mp3", true);
+	else if (difficalty > 0.4)
+		SimpleAudioEngine::getInstance()->playBackgroundMusic("music/bg_music1.mp3", true);
+	else
+		SimpleAudioEngine::getInstance()->playBackgroundMusic("music/bg_music0.mp3", true);
+}
+
+void Slide::playEffect()
+{
+	SimpleAudioEngine::getInstance()->playEffect("music/explore.wav");
 }
 
 void Slide::TouchEvent()
 {
-	/*streak = MotionStreak::create(0.5f, 10, 30, Color3B::WHITE, "Slide/flash.png");
-	this->addChild(streak, 2);*/
-
+	
 	auto listner = EventListenerTouchOneByOne::create();
-	listner->onTouchBegan = CC_CALLBACK_2(Slide::onTouchBegan, this);//´¥Ãþ¿ªÊ¼
-	listner->onTouchMoved = CC_CALLBACK_2(Slide::onTouchMoved, this);//´¥Ãþ¹ý³Ì
-	listner->onTouchEnded = CC_CALLBACK_2(Slide::onTouchEnded, this);//´¥Ãþ½áÊø
+	listner->onTouchBegan = CC_CALLBACK_2(Slide::onTouchBegan, this);
 	_eventDispatcher->addEventListenerWithSceneGraphPriority(listner, this);
 }
+
 
 void Slide::testKeyboardEvent()
 {
@@ -167,21 +182,25 @@ void Slide::testKeyboardEvent()
 }
 
 void Slide::testOntouch() {
-	auto touchListener = EventListenerPhysicsContact::create();
+	touchListener = EventListenerPhysicsContact::create();
 	touchListener->onContactBegin = CC_CALLBACK_1(Slide::onConcactBegan, this);
 	Director::getInstance()->getEventDispatcher()->addEventListenerWithFixedPriority(touchListener, 1);
 }
 
 bool Slide::onConcactBegan(PhysicsContact& contact) {
 	if (contact.getShapeA()->getBody()->getTag() % 10 == 0) {
-		auto ps = ParticleSystemQuad::create("explo.plist");//Á£×ÓÐ§¹ûÊ¹ÓÃ
+		auto ps = ParticleSystemQuad::create("explo.plist");
 		ps->setPosition(contact.getShapeA()->getBody()->getPosition());
 		this->addChild(ps);
+		playEffect();
+		//ps->release();
 
 		if (contact.getShapeB()->getBody()->getTag() % 10 == 0) {
 			contact.getShapeB()->getBody()->removeFromWorld();
-			if (contact.getShapeB()->getBody()->getNode())
+			if (contact.getShapeB()->getBody()->getNode()) {
 				((Sprite*)(contact.getShapeB()->getBody()->getNode()))->removeFromParentAndCleanup(true);
+				//contact.getShapeB()->getBody()->getNode()->release();
+			}
 			enemys.eraseObject(contact.getShapeB()->getBody());
 		}
 		if (contact.getShapeB()->getBody()->getTag() == 1) {
@@ -189,91 +208,90 @@ bool Slide::onConcactBegan(PhysicsContact& contact) {
 		}
 		enemys.eraseObject(contact.getShapeA()->getBody());
 		contact.getShapeA()->getBody()->removeFromWorld();
-		if (contact.getShapeA()->getBody()->getNode())
+		if (contact.getShapeA()->getBody()->getNode()) {
 			((Sprite*)(contact.getShapeA()->getBody()->getNode()))->removeFromParentAndCleanup(true);
+			//contact.getShapeA()->getBody()->getNode()->release();
+		}
 	}
 	else if (contact.getShapeA()->getBody()->getTag() == 1 && contact.getShapeB()->getBody()->getTag() % 10 == 0) {
-		auto ps = ParticleSystemQuad::create("explo.plist");//Á£×ÓÐ§¹ûÊ¹ÓÃ
+		auto ps = ParticleSystemQuad::create("explo.plist");
 		ps->setPosition(contact.getShapeB()->getBody()->getPosition());
 		this->addChild(ps);
+		playEffect();
+		//ps->release();
+
 		bleedNew(contact.getShapeB()->getBody()->getTag());
 		enemys.eraseObject(contact.getShapeB()->getBody());
 		contact.getShapeB()->getBody()->removeFromWorld();
-		if (contact.getShapeB()->getBody()->getNode())
+		if (contact.getShapeB()->getBody()->getNode()) {
 			((Sprite*)(contact.getShapeB()->getBody()->getNode()))->removeFromParentAndCleanup(true);
+			//contact.getShapeB()->getBody()->getNode()->release();
+		}
 	}
 	else if (contact.getShapeA()->getBody()->getTag() % 10 == 5 && contact.getShapeB()->getBody()->getTag() == 1) {
 		switch (contact.getShapeA()->getBody()->getTag())
 		{
 		case 5:
 			shel++;
-			char ttt[30];
-			sprintf(ttt, "shel left: %d", shel);
-			shelLabel->setString(ttt);
+			skillToolLayer->setLabelDefence(shel);
 			break;
 		case 15:
 			bomb++;
-			char tt[30];
-			sprintf(tt, "bomb left: %d", bomb);
-			bombLabel->setString(tt);
+			skillToolLayer->setLabelAttack(bomb);
 			break;
 		case 25:
-			moveTimes += 3;
-			char t[30];
-			sprintf(t, "Left move time: %d", moveTimes);
-			moveNumLabel->setString(t);
+			moveTimes += 1;
+			skillToolLayer->setLabelInstanceMove(moveTimes);
 			break;
 		default:
 			break;
 		}
 		contact.getShapeA()->getBody()->removeFromWorld();
-		if (contact.getShapeA()->getBody()->getNode())
+		if (contact.getShapeA()->getBody()->getNode()) {
 			((Sprite*)(contact.getShapeA()->getBody()->getNode()))->removeFromParentAndCleanup(true);
+		}
 	}
 	else if (contact.getShapeB()->getBody()->getTag() % 10 == 5 && contact.getShapeA()->getBody()->getTag() == 1) {
-		switch (contact.getShapeA()->getBody()->getTag())
+		switch (contact.getShapeB()->getBody()->getTag())
 		{
 		case 5:
 			shel++;
-			char ttt[30];
-			sprintf(ttt, "shel left: %d", shel);
-			shelLabel->setString(ttt);
+			skillToolLayer->setLabelDefence(shel);
 			break;
 		case 15:
 			bomb++;
-			char tt[30];
-			sprintf(tt, "bomb left: %d", bomb);
-			bombLabel->setString(tt);
+			skillToolLayer->setLabelAttack(bomb);
 			break;
 		case 25:
-			moveTimes += 3;
-			char t[30];
-			sprintf(t, "Left move time: %d", moveTimes);
-			moveNumLabel->setString(t);
+			moveTimes += 1;
+			skillToolLayer->setLabelInstanceMove(moveTimes);
 			break;
 		default:
 			break;
 		}
 		contact.getShapeB()->getBody()->removeFromWorld();
-		if (contact.getShapeB()->getBody()->getNode())
+		if (contact.getShapeB()->getBody()->getNode()) {
 			((Sprite*)(contact.getShapeB()->getBody()->getNode()))->removeFromParentAndCleanup(true);
+		}
 	}
 	return true;
 }
 
 void Slide::update(float f) {
-	newEnemys(difficalty);
-	//if (CCRANDOM_0_1() < 0.01 - difficalty * 0.01) addBonus();
-	if (CCRANDOM_0_1() < 0.1) addBonus();
+	if (CCRANDOM_0_1() > 0.2) newEnemys(difficalty);
+	if (CCRANDOM_0_1() < 0.15) addBonus();
 	timesNow += f;
 	if (timesNow >= 1.0) {
 		timeLeft--;
 		timesNow = 0.0;
+		leftTimeLayer->setLabelTime(timeLeft);
 	}
-	char t[30];
-	sprintf(t, "Left time: %d", timeLeft);
-	timeLabel->setString(t);
 	if (timeLeft == 0) escape();
+}
+
+void Slide::Schedule_(Ref *ref)
+{
+	schedule(schedule_selector(Slide::update), 0.5f);
 }
 
 bool Slide::onTouchBegan(Touch *touch, Event *unused_event){
@@ -285,28 +303,31 @@ bool Slide::onTouchBegan(Touch *touch, Event *unused_event){
 		if (location.y >= visibleSize.height || location.y <= 0) {
 			location.y = location.y > 0 ? visibleSize.height : 0;
 		}
-		//Õ½»úÒÆ¶¯
-		player->setPosition(location);
-		char t[30];
-		sprintf(t, "Left move time: %d", moveTimes);
-		moveNumLabel->setString(t);
+
+		SimpleAudioEngine::getInstance()->playEffect("music/instance_fly.wav");
+
+		instanceMoveTarget = location;
+		
+		// 设置瞬移点
+		if (instance_move_target != NULL) {
+			instance_move_target->removeFromParentAndCleanup(true);
+			instance_move_target = NULL;
+		}
+		instance_move_target = Sprite::create("instance_move_target.png");
+		instance_move_target->setPosition(instanceMoveTarget);
+		this->addChild(instance_move_target);
+
+		ScaleTo * scaleToSmall = ScaleTo::create(0.1f, 0.1f);
+		ScaleTo * scaleToHold = ScaleTo::create(0.1f, 0.1f);
+		ScaleTo * scaleToBig = ScaleTo::create(0.1f, 1.0f);
+		CallFunc *instanceMove = CallFunc::create(this, CC_CALLFUNC_SELECTOR(Slide::InstanceMove));
+		Sequence * sequence = Sequence::create(scaleToSmall->clone(), instanceMove, scaleToBig->clone(), NULL);
+		player->runAction(sequence);
+
+		skillToolLayer->setLabelInstanceMove(moveTimes);
 		return true;
 	}
 }
-
-void Slide::onTouchMoved(Touch *touch, Event *unused_event) {
-	//Point location = touch->getLocation();
-	//if (location.x >= visibleSize.width || location.x <= 0) {
-	//	location.x = location.x > 0 ? visibleSize.width : 0;
-	//}
-	//if (location.y >= visibleSize.height || location.y <= 0) {
-	//	location.y = location.y > 0 ? visibleSize.height : 0;
-	//}
-	////Õ½»úÒÆ¶¯
-	//player->runAction(MoveTo::create(5, location));
-}
-
-void Slide::onTouchEnded(Touch *touch, Event *unused_event){}
 
 void Slide::newEnemys(float f) {
 	int newNum = 1;
@@ -344,42 +365,42 @@ void Slide::newEnemys(float f) {
 }
 
 void Slide::addEnemy(int type, Point p) {
-	Sprite *re;
+	char path[100];
+	int tag;
 	switch (type)
 	{
 	case 0:
-		re = Sprite::create("stone1.png");
-		re->setPhysicsBody(PhysicsBody::createCircle(re->getContentSize().height / 2));
-		re->getPhysicsBody()->setTag(10);
+		sprintf(path, "stone1.png");
+		tag = 10;
 		break;
 	case 1:
-		re = Sprite::create("stone2.png");
-		re->setPhysicsBody(PhysicsBody::createCircle(re->getContentSize().height / 2));
-		re->getPhysicsBody()->setTag(20);
+		sprintf(path, "stone2.png");
+		tag = 20;
 		break;
 	case 2:
-		re = Sprite::create("stone3.png");
-		re->setPhysicsBody(PhysicsBody::createCircle(re->getContentSize().height / 2));
-		re->getPhysicsBody()->setTag(30);
+		sprintf(path, "stone3.png");
+		tag = 30;
 		break;
 	default:
-		re = Sprite::create("stone1.png");
-		re->setPhysicsBody(PhysicsBody::createCircle(re->getContentSize().height / 2));
-		re->getPhysicsBody()->setTag(10);
+		sprintf(path, "stone1.png");
+		tag = 10;
 		break;
 	}
-
+	auto re = Sprite::create(path);
+	re->setPhysicsBody(PhysicsBody::createCircle(re->getContentSize().height / 2));
 	re->setAnchorPoint(Vec2(0.5, 0.5));
 	re->setScale(0.5, 0.5);
 	re->setPosition(p);
 	re->getPhysicsBody()->setCategoryBitmask(0x00000001);
 	re->getPhysicsBody()->setContactTestBitmask(0x00000001);
+	re->getPhysicsBody()->setTag(tag);
 	if (rand() % 100 < (100 * difficalty)) {
-		re->getPhysicsBody()->setVelocity((player->getPosition() - p) * difficalty);
+		re->getPhysicsBody()->setVelocity((player->getPosition() - p) * (difficalty - 0.22));
 	}
 	else {
-		re->getPhysicsBody()->setVelocity((Point(rand() % (int)(visibleSize.width), rand() % (int)(visibleSize.height)) - p) * difficalty);
+		re->getPhysicsBody()->setVelocity((Point(rand() % (int)(visibleSize.width - 100) + 50, rand() % (int)(visibleSize.height - 100) + 50) - p) * (difficalty - 0.22));
 	}
+	re->getPhysicsBody()->setAngularVelocity(CCRANDOM_0_1() * 10);
 	enemys.pushBack(re->getPhysicsBody());
 	addChild(re);
 }
@@ -405,12 +426,22 @@ void Slide::onKeyPressed(EventKeyboard::KeyCode code, Event* event) {
 		break;
 	case cocos2d::EventKeyboard::KeyCode::KEY_Q:
 		if (bomb > 0) {
+			auto ps = ParticleSystemQuad::create("ring.plist");
+			ps->setPosition(player->getPosition());
+			this->addChild(ps);
+			playEffect();
+			//ps->release();
+
+			// test
+			SkillLayer::showSkillLayerRandom(this);
+
 			for each (PhysicsBody* s in enemys)
 			{
 				if (s == nullptr) continue;
-				auto ps = ParticleSystemQuad::create("explo.plist");//Á£×ÓÐ§¹ûÊ¹ÓÃ
+				auto ps = ParticleSystemQuad::create("explo.plist");
 				ps->setPosition(s->getPosition());
 				this->addChild(ps);
+				playEffect();
 				if (s != nullptr) {
 					s->removeFromWorld();
 					((Sprite*)s->getNode())->removeFromParentAndCleanup(true);
@@ -419,23 +450,20 @@ void Slide::onKeyPressed(EventKeyboard::KeyCode code, Event* event) {
 			enemys.clear();
 
 			bomb--;
-			char t[30];
-			sprintf(t, "bomb left: %d", bomb);
-			bombLabel->setString(t);
+			skillToolLayer->setLabelAttack(bomb);
 		}
 		break;
 	case cocos2d::EventKeyboard::KeyCode::KEY_E:
 		if (shel > 0) {
 			this->unschedule(schedule_selector(Slide::nodefence));
 			defence = true;
-			CCTexture2D* texture = CCTextureCache::sharedTextureCache()->addImage("player2_shel.png");
+			auto texture = CCTextureCache::sharedTextureCache()->addImage("player2_shel.png");
 			player->setTexture(texture);
 			this->scheduleOnce(schedule_selector(Slide::nodefence), 5.0f);
 
 			shel--;
-			char t[30];
-			sprintf(t, "shel left: %d", shel);
-			shelLabel->setString(t);
+			skillToolLayer->setLabelDefence(shel);
+			SimpleAudioEngine::getInstance()->playEffect("music/shel.wav");
 		}
 		break;
 	default:
@@ -469,15 +497,15 @@ void Slide::onKeyReleased(EventKeyboard::KeyCode code, Event* event) {
 void Slide::bleedNew(int lose) {
 	if (defence) return;
 	bleed -= lose;
-	char t[30];
-	sprintf(t, "Your bleed: %d", bleed);
-	bleedLabel->setString(t);
-	if (bleed <= 30) bleedLabel->setColor(Color3B::RED);
+	if (bleed < 0) bleed = 0;
+	lifeLayer->setBloodPercentage(bleed);
+	lifeLayer->setLabelBlood(bleed);
+	if (bleed <= 30) lifeLayer->setBloodColor(Color3B::RED);
 	if (bleed <= 0) gameOver();
 }
 
 void Slide::addBonus() {
-	Point location = Vec2(0, 0);
+	auto location = Vec2(0, 0);
 	switch (rand() % 4)
 	{
 	case 0:
@@ -499,88 +527,147 @@ void Slide::addBonus() {
 	default:
 		break;
 	}
-	Sprite *re;
+
+	char path[30];
+	int tag;
+	int cbit;
 	switch (rand() % 3)
 	{
 	case 0:
-		re = Sprite::create("defence.png");
-		re->setPhysicsBody(PhysicsBody::createCircle(30));
-		re->getPhysicsBody()->setTag(5);
-		re->getPhysicsBody()->setCategoryBitmask(0x00000010);
-		re->getPhysicsBody()->setContactTestBitmask(0x00000010);
+		sprintf(path, "defence.png");
+		tag = 5;
+		cbit = 0x00000010;
 		break;
 	case 1:
-		re = Sprite::create("bomb1.png");
-		re->setPhysicsBody(PhysicsBody::createCircle(30));
-		re->getPhysicsBody()->setTag(15);
-		re->getPhysicsBody()->setCategoryBitmask(0x00000100);
-		re->getPhysicsBody()->setContactTestBitmask(0x00000100);
+		sprintf(path, "bomb1.png");
+		tag = 15;
+		cbit = 0x00000100;
 		break;
 	default:
-		re = Sprite::create("defend.png");
-		re->setPhysicsBody(PhysicsBody::createCircle(30));
-		re->getPhysicsBody()->setTag(25);
-		re->getPhysicsBody()->setCategoryBitmask(0x00001000);
-		re->getPhysicsBody()->setContactTestBitmask(0x00001000);
+		sprintf(path, "defend.png");
+		tag = 25;
+		cbit = 0x00001000;
 		break;
 	}
+	auto re = Sprite::create(path);
+	re->setPhysicsBody(PhysicsBody::createCircle(30));
+	re->getPhysicsBody()->setTag(tag);
+	re->getPhysicsBody()->setCategoryBitmask(cbit);
+	re->getPhysicsBody()->setContactTestBitmask(cbit);
 	re->setAnchorPoint(Vec2(0.5, 0.5));
 	re->setPosition(location);
-	re->getPhysicsBody()->setVelocity((Point(rand() % (int)(visibleSize.width), rand() % (int)(visibleSize.height)) - location) * difficalty);
+	re->getPhysicsBody()->setVelocity((Point(rand() % (int)(visibleSize.width - 100) + 50, rand() % (int)(visibleSize.height - 100) + 50) - location) * difficalty);
 	addChild(re, 2);
 }
 
 void Slide::nodefence(float f) {
 	defence = false;
-	CCTexture2D* texture = CCTextureCache::sharedTextureCache()->addImage("player2.png");
+	auto texture = CCTextureCache::sharedTextureCache()->addImage("player2.png");
 	player->setTexture(texture);
 }
 
 void Slide::escape() {
-	defence = false;
-	difficalty = 0.2;
-	moveTimes = 10;
-	bleed = 100;
-	timesNow = 0.0;
-	timeLeft = 10;
-	bomb = 0;
-	shel = 0;
-
-	auto l = Label::createWithTTF("You Escape!!", "fonts/Marker Felt.ttf", 40);
-	SimpleAudioEngine::getInstance()->stopBackgroundMusic();
-	l->setColor(Color3B::GREEN);
-	l->setPosition(visibleSize / 2);
-	this->addChild(l, 2);
-
-	defence = true;
+	for each (PhysicsBody* s in enemys)
+	{
+		if (s == nullptr) continue;
+		s->removeFromWorld();
+		((Sprite*)s->getNode())->removeFromParentAndCleanup(true);
+	}
+	enemys.clear();
 	this->unschedule(schedule_selector(Slide::update));
-	this->scheduleOnce(schedule_selector(Slide::backToMenu), 2);
+	MoveTo * moveTo = MoveTo::create(1.0f, visibleSize / 2);
+	ScaleTo * scaleTo = ScaleTo::create(1.0f, 0);
+	FadeOut * fadeOut = FadeOut::create(1.0f);
+	Spawn * spawn = Spawn::create(moveTo->clone(), scaleTo->clone(), fadeOut->clone(), NULL);
+	player->runAction(spawn);
+	player->getPhysicsBody()->setVelocity(Vec2(0, 0));
 
-}
+	if (difficalty > 0.6)
+		SimpleAudioEngine::getInstance()->stopBackgroundMusic("music/bg_music3.mp3");
+	else if (difficalty > 0.5)
+		SimpleAudioEngine::getInstance()->stopBackgroundMusic("music/bg_music2.mp3");
+	else if (difficalty > 0.4)
+		SimpleAudioEngine::getInstance()->stopBackgroundMusic("music/bg_music1.mp3");
+	else
+		SimpleAudioEngine::getInstance()->stopBackgroundMusic("music/bg_music0.mp3");
 
-void Slide::backToMenu(float f)
-{
-	/*auto scene = Scene::create();
-	auto *layer = HelloWorld::create();
-	scene->addChild(layer);
-	Director::getInstance()->replaceScene(scene);*/
+	SimpleAudioEngine::getInstance()->playEffect("music/win.mp3");
+	Director::getInstance()->getEventDispatcher()->removeEventListener(this->getTouchListener());
+	DialogLayer::showDialogLayer(this, "ESCAPE from another black hole!!", "", NULL,"Escape", menu_selector(Slide::Return), DialogLayer::STATUS::WIN);
 
-	Director::getInstance()->popScene();
 }
 
 void Slide::gameOver() {
+	for each (PhysicsBody* s in enemys)
+	{
+		if (s->getNode() == nullptr) continue;
+		s->removeFromWorld();
+		((Sprite*)s->getNode())->removeFromParentAndCleanup(true);
+	}
+	enemys.clear();
+	this->unschedule(schedule_selector(Slide::update));
 
-	defence = false;
-	difficalty = 0.2;
-	moveTimes = 10;
-	bleed = 100;
-	timesNow = 0.0;
-	timeLeft = 10;
-	bomb = 0;
-	shel = 0;
+	// 失败后飞船爆炸并且消失
+	auto ps = ParticleSystemQuad::create("explo.plist");
+	ps->setPosition(player->getPosition());
+	this->addChild(ps);
+	player->removeFromParentAndCleanup(true);
 
-	auto scene = Scene::create();
-	auto *layer = DialogLayer::create();
-	scene->addChild(layer);
+	// 停止音乐
+	if (difficalty > 0.6)
+		SimpleAudioEngine::getInstance()->stopBackgroundMusic("music/bg_music3.mp3");
+	else if (difficalty > 0.5)
+		SimpleAudioEngine::getInstance()->stopBackgroundMusic("music/bg_music2.mp3");
+	else if (difficalty > 0.4)
+		SimpleAudioEngine::getInstance()->stopBackgroundMusic("music/bg_music1.mp3");
+	else
+		SimpleAudioEngine::getInstance()->stopBackgroundMusic("music/bg_music0.mp3");
+
+	// 失败后停止计时
+	leftTimeLayer->stopAction();
+
+	SimpleAudioEngine::getInstance()->playEffect("music/fail.mp3");
+
+	Director::getInstance()->getEventDispatcher()->removeEventListener(this->getTouchListener());
+	DialogLayer::showDialogLayer(this, "You died in the black hole!!", "Play again", menu_selector(Slide::Restart), "Exit", menu_selector(Slide::Exit), DialogLayer::STATUS::FAIL);
+}
+
+void Slide::Return(Ref *ref) {
+	SimpleAudioEngine::getInstance()->playBackgroundMusic("music/map_music0.mp3");
+	Director::getInstance()->popScene();
+}
+
+void Slide::Restart(Ref *ref) {
+	Director::getInstance()->getTextureCache()->removeUnusedTextures();
+	CCAnimationCache::purgeSharedAnimationCache();
+	CCSpriteFrameCache::sharedSpriteFrameCache()->removeUnusedSpriteFrames();
+	SpriteFrameCache::getInstance()->removeUnusedSpriteFrames();
+	SpriteFrameCache::getInstance()->removeSpriteFrames();
+
+	Scene * scene = Adventure::scene();
 	Director::getInstance()->replaceScene(scene);
+}
+
+void Slide::Exit(Ref *ref) {
+	Director::getInstance()->getTextureCache()->removeUnusedTextures();
+	CCAnimationCache::purgeSharedAnimationCache();
+	CCSpriteFrameCache::sharedSpriteFrameCache()->removeUnusedSpriteFrames();
+	SpriteFrameCache::getInstance()->removeUnusedSpriteFrames();
+	SpriteFrameCache::getInstance()->removeSpriteFrames();
+
+	Director::getInstance()->end();
+}
+
+//test
+
+EventListenerPhysicsContact * Slide::getTouchListener() {
+	return touchListener;
+}
+
+void Slide::InstanceMove() {
+	if (instance_move_target != NULL) {
+		instance_move_target->removeFromParentAndCleanup(true);
+		instance_move_target = NULL;
+	}
+	player->setPosition(instanceMoveTarget);
 }

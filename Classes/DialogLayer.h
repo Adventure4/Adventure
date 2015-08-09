@@ -11,20 +11,15 @@
 
 
 #include "cocos2d.h"
-#include "Slide.h"
-#include "HelloWorldScene.h"
-
+#include "Adventure.h"
 
 USING_NS_CC;
 
 class DialogLayer: public CCLayerColor
 {
-    // 模态对话框菜单
-    CCMenu *m_pMenu;
-    // 记录菜单点击
-    bool m_bTouchedMenu;
-    
+	
 public:
+	enum STATUS{WIN,FAIL,NONE};
     DialogLayer();
     ~DialogLayer();
     
@@ -46,6 +41,17 @@ public:
     
     void okMenuItemCallback(CCObject *pSender);
     void cancelMenuItemCallback(CCObject *pSender);
+	
+	Menu* getMenu();
+
+	static void showDialogLayer(Layer *layer, String title, String leftString = "", SEL_MenuHandler leftHandler = NULL, String rightString = "", SEL_MenuHandler rightHandler = NULL, DialogLayer::STATUS status = DialogLayer::STATUS::NONE);
+private:
+	static DialogLayer * dialogLayer;    
+	// 模态对话框菜单
+	Menu *m_pMenu;
+	// 记录菜单点击
+	bool m_bTouchedMenu;
+
 };
 
 #endif
