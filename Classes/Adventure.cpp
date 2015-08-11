@@ -481,14 +481,6 @@ void Adventure::onDownPressed(Ref* sender)
 	move(direct);
 }
 
-void Adventure::Restart(Ref* sender) {
-
-	auto scene = Scene::create();
-	auto *layer = Adventure::create();
-	scene->addChild(layer);
-	Director::getInstance()->replaceScene(scene);
-}
-
 void Adventure::NextMap() {
 	
 	// 暂存各项属性值
