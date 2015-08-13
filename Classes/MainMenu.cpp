@@ -75,12 +75,8 @@ bool MainMenu::init()
 	p1->setAutoRemoveOnFinish(true);
 	p1->setPositionType(kCCPositionTypeRelative);
 	p1->setTotalParticles(100);
-
-
 	p1->setPosition(ccp(65, Director::getInstance()->getVisibleSize().height - 142));
-
 	this->addChild(p1, 3);
-
 
 	auto bgsprite = Sprite::create("background5.jpg");
 	float odds;
@@ -92,13 +88,9 @@ bool MainMenu::init()
 	bgsprite->setPosition(Vec2(visibleSize / 2) + origin);
 	this->addChild(bgsprite, 0);
 
-	
-
 	// ²¥·ÅÒôÀÖ
 	SimpleAudioEngine::getInstance()->playBackgroundMusic("music/main_menu.mp3", true);
 
-	//
-	//
     return true;
 }
 

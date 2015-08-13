@@ -57,6 +57,12 @@ bool aboutmenu::init(PhysicsWorld* world)
 	this->addChild(label, 1);
 
 	bgsprite = Sprite::create("background4.jpg");
+	float odds;
+	float oddsY;
+	oddsY = bgsprite->getContentSize().height / visibleSize.height;
+	odds = bgsprite->getContentSize().width / visibleSize.width;
+	bgsprite->setScaleY(1 / oddsY);
+	bgsprite->setScaleX(1 / odds);
 	bgsprite->setPosition(Point(visibleSize.width / 2, visibleSize.height / 2));
 	this->addChild(bgsprite, 0);
 

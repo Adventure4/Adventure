@@ -8,10 +8,6 @@ const float SIZE_WSAD = 100.0;
 const int FONT_SIZE = 45;
 const int NUM_BLACK_HOLE = 7;
 
-
-
-
-
 const int heroLife[6] = {60, 70, 80, 90, 100, 110};
 const int heroAttack[6] = {5, 10, 15, 20, 25, 30};
 const int heroExp[6] = { 60, 70, 80, 90, 100, 110 };
@@ -21,7 +17,7 @@ const float MOVE_TIME = 0.3f;
 const int expArray[10] = {50, 100, 150, 200, 250, 300, 350, 400, 450, 500};
 const int attackArray[10] = {10, 15, 20, 25, 30, 35, 40, 45, 50, 55};
 //const int lifeArray[10] = { 60, 70, 90, 110, 130, 150, 180, 220, 250, 300};
-const int lifeArray[10] = { 80, 90, 100, 110, 120, 130, 140, 150, 160, 170 };
+const int lifeArray[10] = {70, 80, 90, 100, 110, 120, 130, 140, 150, 160};
 
 Adventure * Adventure::adventure = NULL;
 
@@ -53,6 +49,15 @@ void Adventure::move(Point direct) {
 	int x = player->getPosition().x;
 	int y = player->getPosition().y;
 
+	if (isRandom) {
+		isRandom = false;
+		isFirstRandom = true;
+		schedule(schedule_selector(Adventure::update), 0.2f);
+	}
+	else {
+		unschedule(schedule_selector(Adventure::update));
+	}
+
 	statusLayer->setLabelLevel(level);
 	statusLayer->setLabelAttack(attack);
 	statusLayer->setLabelExp(experience, level);
@@ -66,6 +71,29 @@ void Adventure::move(Point direct) {
 	}
 	SimpleAudioEngine::getInstance()->playEffect("music/player_move.wav");
 	player->setPosition(nextPos);
+}
+
+void Adventure::update(float f)
+{
+	if (isFirstRandom) {
+		Global * global = Global::getInstance();
+		life = global->getLife();
+		attack = global->getAttack();
+		experience = global->getExperience();
+
+		levelJudge();
+		statusLayer->setLabelLevel(level);
+		statusLayer->setLabelAttack(attack);
+		statusLayer->setLabelExp(experience, level);
+		statusLayer->setLabelLife(life, level);
+
+		isFirstRandom = false;
+	}
+
+	if (life <= 0) {
+		GameOver();
+		return;
+	}
 }
 
 void Adventure::judge(string obj, Point nextPos) {
@@ -137,8 +165,6 @@ void Adventure::judge(string obj, Point nextPos) {
 			}
 	}
 	
-	
-	
 	// 判断补给，恢复满血
 	if (obj == "v_supply") {
 		Vector<Sprite*>::iterator it = v_supply.begin();
@@ -170,6 +196,7 @@ void Adventure::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it = v_random.begin();
 		for (; it != v_random.end(); it++)
 			if ((*it)->getPosition() == nextPos) {
+				isRandom = true;
 				SimpleAudioEngine::getInstance()->playEffect("music/random.wav");
 				JumpRandom(nextPos);
 				(*it)->removeFromParentAndCleanup(true);
@@ -189,7 +216,6 @@ void Adventure::judge(string obj, Point nextPos) {
 			}
 	}
 }
-
 
 void Adventure::BlackHole(Point nextPos, int version) {
 	
@@ -232,25 +258,14 @@ void Adventure::BlackHole(Point nextPos, int version) {
 
 	// 以下随机事件均可弹窗显示
 void Adventure::JumpRandom(Point nextPos) {
-	int i = rand() % 3;
-	if (i == 0) {
-		// 内部成员背叛，血量减少60
-		statusLayer->setLabelInfo("Internal betray!\nDecrease 60 life value.");
-		life -= 60;
-		if (life <= 0)
-			GameOver();
-	}
-	else if (i == 1) {
-		// 拾获太空水晶，攻击力增加5
-		statusLayer->setLabelInfo("Increase 5 attack value!");
-		attack += 5;
-	}
-	else if (i == 2) {
-		// 遭遇黑洞，进入另一场景
-		statusLayer->setLabelInfo("A black hole!");
-		BlackHole(nextPos, 1);
+	Global * global = Global::getInstance();
+	global->setLife(life);
+	global->setLevel(level);
+	global->setExperience(experience);
+	global->setAttack(attack);
 
-	}
+	Scene * scene = Random::scene();
+	Director::getInstance()->pushScene(scene);
 }
 
 void Adventure::levelJudge() {
@@ -350,8 +365,6 @@ bool Adventure::init()
 	bgsprite->setScaleX(1 / odds);
 	bgsprite->setPosition(Vec2(visibleSize / 2));
 	this->addChild(bgsprite, 0);
-
-	
 	
 	loadObject();
 
@@ -368,9 +381,6 @@ bool Adventure::init()
 
 	return true;
 }
-
-
-
 
 void Adventure::loadObject(){
 	//根据文件路径快速导入瓦片地图
@@ -481,6 +491,14 @@ void Adventure::onDownPressed(Ref* sender)
 	move(direct);
 }
 
+void Adventure::Restart(Ref* sender) {
+
+	auto scene = Scene::create();
+	auto *layer = Adventure::create();
+	scene->addChild(layer);
+	Director::getInstance()->replaceScene(scene);
+}
+
 void Adventure::NextMap() {
 	
 	// 暂存各项属性值
@@ -544,8 +562,6 @@ void Adventure::endGame(Ref * ref) {
 	Adventure::resumeEventListener();
 	Director::getInstance()->end();
 }
-
-
 
 void Adventure::resumeEventListener() {
 	Director::getInstance()->getEventDispatcher()->resumeEventListenersForTarget(Adventure::adventure);

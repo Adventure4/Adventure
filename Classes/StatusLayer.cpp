@@ -4,7 +4,7 @@
 const Size StatusLayer::STATUS = Size(300, 300);
 const int StatusLayer::STATUS_SIZE = 20;
 const int expArray[10] = { 50, 100, 150, 200, 250, 300, 350, 400, 450, 500 };
-const int lifeArray[15] = { 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210, 220 };
+const int lifeArray[15] = { 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 210};
 
 StatusLayer::StatusLayer()
 {
@@ -24,8 +24,8 @@ void StatusLayer::setLabelInfo(String info) {
 		label_info->setString(info.getCString());
 		return;
 	}
-	label_info = Label::createWithTTF((String::createWithFormat("Warrior,\n forward to the unknown.")->getCString()),
-		"fonts/Marker Felt.ttf", STATUS_SIZE);
+	label_info = Label::createWithTTF((String::createWithFormat("Warrior,forward to\n the unknown.")->getCString()),
+		"fonts/Marker Felt.ttf", STATUS_SIZE + 1);
 	label_info->setTextColor(Color4B::BLACK);
 	label_info->setPosition(-10, 110);
 	this->addChild(label_info, 4);

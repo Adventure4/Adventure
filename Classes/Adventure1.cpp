@@ -2,7 +2,11 @@
 #include "SimpleAudioEngine.h"
 
 using namespace CocosDenshion;
-
+static int num = 0;
+static int lastLife = 0;
+static int lastLevel = 0;
+static int lastAttack = 0;
+static int lastExp = 0;
 const float SIZE_WSAD = 100.0;
 const int FONT_SIZE = 45;
 const int NUM_BLACK_HOLE = 7;
@@ -12,7 +16,7 @@ const int heroExp[6] = { 60, 70, 80, 90, 100, 110 };
 const int expArray[15] = {50, 100, 150, 200, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750};
 const int attackArray[15] = {10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80};
 //const int lifeArray[15] = { 60, 70, 90, 110, 130, 150, 180, 220, 250, 300, 330, 360, 490, 520, 550};
-const int lifeArray[15] = { 80, 90, 100, 110, 120, 130, 140, 150, 160, 170 ,180, 190, 200, 210 ,220};
+const int lifeArray[15] = { 70,80, 90, 100, 110, 120, 130, 140, 150, 160, 170 ,180, 190, 200, 210 };
 //const int lifeArray[10] = { 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000 };
 
 Adventure1 * Adventure1::adventure = NULL;
@@ -63,6 +67,15 @@ void Adventure1::move(Point direct) {
 	int x = player->getPosition().x;
 	int y = player->getPosition().y;
 
+	if (isRandom) {
+		schedule(schedule_selector(Adventure1::update), 0.2f);
+		isRandom = false;
+		isFirstRandom = true;
+	}
+	else {
+		unschedule(schedule_selector(Adventure1::update));
+	}
+
 	statusLayer->setLabelLevel(level);
 	statusLayer->setLabelAttack(attack);
 	statusLayer->setLabelExp(experience, level);
@@ -77,6 +90,29 @@ void Adventure1::move(Point direct) {
 	//if (flag == true)
 	SimpleAudioEngine::getInstance()->playEffect("music/player_move.wav");
 	player->setPosition(nextPos);
+}
+
+void Adventure1::update(float f)
+{
+	if (isFirstRandom) {
+		Global * global = Global::getInstance();
+		life = global->getLife();
+		attack = global->getAttack();
+		experience = global->getExperience();
+
+		levelJudge();
+		statusLayer->setLabelLevel(level);
+		statusLayer->setLabelAttack(attack);
+		statusLayer->setLabelExp(experience, level);
+		statusLayer->setLabelLife(life, level);
+
+		isFirstRandom = false;
+	}
+
+	if (life <= 0) {
+		GameOver();
+		return;
+	}
 }
 
 void Adventure1::judge(string obj, Point nextPos) {
@@ -180,6 +216,7 @@ void Adventure1::judge(string obj, Point nextPos) {
 		Vector<Sprite*>::iterator it = v_random.begin();
 		for (; it != v_random.end(); it++)
 			if ((*it)->getPosition() == nextPos) {
+				isRandom = true;
 				SimpleAudioEngine::getInstance()->playEffect("music/random.wav");
 				JumpRandom(nextPos);
 				(*it)->removeFromParentAndCleanup(true);
@@ -237,25 +274,14 @@ void Adventure1::BlackHole(Point nextPos, int version) {
 
 	// 以下随机事件均可弹窗显示
 void Adventure1::JumpRandom(Point nextPos) {
-	int i = rand() % 3;
-	if (i == 0) {
-		// 内部成员背叛，血量减少60
-		statusLayer->setLabelInfo("Internal betray!\nDecrease 60 life value.");
-		life -= 60;
-		if (life <= 0)
-			GameOver();
-	}
-	else if (i == 1) {
-		// 拾获太空水晶，攻击力增加5
-		statusLayer->setLabelInfo("Increase 5 attack value!");
-		attack += 5;
-	}
-	else if (i == 2) {
-		// 遭遇黑洞，进入另一场景
-		statusLayer->setLabelInfo("A black hole!");
-		BlackHole(nextPos, 1);
+	Global * global = Global::getInstance();
+	global->setLife(life);
+	global->setLevel(level);
+	global->setExperience(experience);
+	global->setAttack(attack);
 
-	}
+	Scene * scene = Random::scene();
+	Director::getInstance()->pushScene(scene);
 }
 
 void Adventure1::levelJudge() {
@@ -359,7 +385,23 @@ bool Adventure1::init()
 	bgsprite->setPosition(Vec2(visibleSize / 2));
 	this->addChild(bgsprite, 0);
 
-	initTouchEvent();
+	if (num == 0){
+		Global * global = Global::getInstance();
+		life = global->getLife();
+		attack = global->getAttack();
+		experience = global->getExperience();
+		level = global->getLevel();
+		lastLife = life;
+		lastAttack = attack;
+		lastExp = experience;
+		lastLevel = level;
+	}
+	else{
+		life = lastLife;
+		attack = lastAttack;
+		experience = lastExp;
+		level = lastLevel;
+	}
 	
 	loadObject();
 
@@ -370,26 +412,6 @@ bool Adventure1::init()
 }
 
 
-
-void Adventure1::initTouchEvent(){
-	auto menu = Menu::create();
-	menu->setPosition(visibleSize.width,0);
-	menu->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
-	this->addChild(menu,10);
-
-	auto label_RS = Label::createWithTTF("Restart", "fonts/Marker Felt.ttf", 35);
-	auto button_rs = MenuItemLabel::create(label_RS, CC_CALLBACK_1(Adventure1::Restart, this));
-	button_rs->setPosition(SIZE_WSAD * (-8) - 32, SIZE_WSAD * 1-15);
-	button_rs->setAnchorPoint(Vec2::ANCHOR_BOTTOM_RIGHT);
-	menu->addChild(button_rs);
-
-	// 载入上一张地图存储的属性值
-	Global * global = Global::getInstance();
-	life = global->getLife();
-	attack = global->getAttack();
-	experience = global->getExperience();
-	level = global->getLevel();
-}
 
 void Adventure1::loadObject(){
 	//根据文件路径快速导入瓦片地图
@@ -562,6 +584,8 @@ void Adventure1::playAgain1(Ref *ref) {
 
 // 从第二关开始，用于游戏失败时
 void Adventure1::playAgain2(Ref *ref) {
+	num += 1;;
+	unschedule(schedule_selector(Adventure1::update));
 	Scene * scene = Adventure1::scene();
 	Director::getInstance()->replaceScene(scene);
 }

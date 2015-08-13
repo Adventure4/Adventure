@@ -9,6 +9,7 @@
 #include "StatusLayer.h"
 #include "Infolayer.h"
 #include "WarLayer.h"
+#include "Random.h"
 #include <string>
 #include <stdio.h> 
 #include <iostream> 
@@ -92,6 +93,8 @@ public:
 	void playAgain2(Ref *ref);
 	void endGame(Ref * ref);
 
+	void update(float f);
+
 protected:
 	static Adventure1 * adventure;
 	Size visibleSize;
@@ -108,6 +111,12 @@ protected:
 	int attack;
 	int experience;
 	bool whether_black_hole = false;
+
+	bool isRandom = false;
+	bool isFirstRandom = false;
+	bool isFirst = true;
+
+	
 };
 
 #endif

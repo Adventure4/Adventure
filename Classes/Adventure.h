@@ -9,6 +9,7 @@
 #include "Infolayer.h"
 #include "WarLayer.h"
 //#include "SkillLayer.h"
+#include "Random.h"
 
 #include <string>
 #include <stdio.h> 
@@ -33,7 +34,17 @@ public:
 
 	virtual bool init();
 
-	
+	/*
+	存储各个对象的vector，包括：
+	wall：不可前进
+	stone：陨石，可减少生命值
+	monster1;怪物1
+	monster2;怪物2
+	black_hole;黑洞，可触发另一场景。胜利后随机出现在另一黑洞中
+	destination;终点，虫洞标志。共有另个虫洞，一个被黑洞包围，另一个被高级怪物包围。
+	random;随机事件
+	supply;供给站
+	*/
 	Vector < Sprite * > v_wall;
 	Vector < Sprite * > v_hero1;
 	Vector < Sprite * > v_hero2;
@@ -71,6 +82,7 @@ public:
 	int getLevel() { return level; };
 	int getExp() { return experience; };
 	
+	void Restart(Ref* sender);
 	void NextMap();
 	void GameOver();
 
@@ -87,6 +99,7 @@ public:
 	void playAgain(Ref *ref);
 	void endGame(Ref * ref);
 
+	void update(float f);
 
 protected:
 	static Adventure * adventure;
@@ -97,13 +110,16 @@ protected:
 
 	StatusLayer *  statusLayer;
 
-	int life = 80;
+	int life = 70;
 	//int life = 10000;
 	int level = 0;
 	int attack = 10;
 	int experience = 0;
 	bool whether_black_hole = false;
 	EventListenerKeyboard * keyboardListener;
+
+	bool isRandom = false;
+	bool isFirstRandom = false;
 };
 
 #endif
