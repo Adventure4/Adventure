@@ -1,2 +1,3 @@
-Game Adventure of Team A
+Game Adventure
+”Ó÷ÊŒﬁµ–¥Úπ÷∂”
 Cocos2d-x 3.6
