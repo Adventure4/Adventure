@@ -52,7 +52,7 @@ bool aboutmenu::init(PhysicsWorld* world)
 		" You are a warrior that human has selected to find a new planet.\n"
 		"You should beat the monsters and go through the wormstone in order to go farther.\n\n"
 		"Don't be afraid.\n","fonts/comic.ttf" , 20);
-	label->setPosition(Vec2(origin.x + visibleSize.width / 3+200,
+	label->setPosition(Vec2(origin.x + visibleSize.width / 3+170,
 		origin.y + visibleSize.height - label->getContentSize().height));
 	this->addChild(label, 1);
 
@@ -69,7 +69,7 @@ bool aboutmenu::init(PhysicsWorld* world)
 	auto item3 = MenuItemLabel::create(Label::createWithTTF("Good luck!", "fonts/Marker Felt.ttf", 35), CC_CALLBACK_1(aboutmenu::Exit, this));
 
 	auto menu = Menu::create(item3, NULL);
-	menu->setPosition(Director::getInstance()->getVisibleSize().width / 5, Director::getInstance()->getVisibleSize().height / 3);
+	menu->setPosition(Director::getInstance()->getVisibleSize().width / 5 - 30, Director::getInstance()->getVisibleSize().height / 3);
 	menu->alignItemsVerticallyWithPadding(label->getContentSize().height / 3);
 	this->addChild(menu, 2);
 

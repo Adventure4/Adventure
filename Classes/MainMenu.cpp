@@ -75,7 +75,7 @@ bool MainMenu::init()
 	p1->setAutoRemoveOnFinish(true);
 	p1->setPositionType(kCCPositionTypeRelative);
 	p1->setTotalParticles(100);
-	p1->setPosition(ccp(65, Director::getInstance()->getVisibleSize().height - 142));
+	p1->setPosition(ccp(60, Director::getInstance()->getVisibleSize().height - 127));
 	this->addChild(p1, 3);
 
 	auto bgsprite = Sprite::create("background5.jpg");
