@@ -52,19 +52,19 @@ bool Random::init()
 	auto item1 = Sprite::create("chest_2.png");
 	auto item2 = Sprite::create("chest_2.png");
 	auto item3 = Sprite::create("chest_2.png");
-	item1->setPosition(visibleSize.width / 2, 480);
-	item2->setPosition(visibleSize.width / 4, 480);
-	item3->setPosition(visibleSize.width / 4 * 3, 480);
+	item1->setPosition(visibleSize.width / 2, 450);
+	item2->setPosition(visibleSize.width / 4, 450);
+	item3->setPosition(visibleSize.width / 4 * 3, 450);
 	this->addChild(item1, 1);
 	this->addChild(item2, 1);
 	this->addChild(item3, 1);
 
 	auto button1 = MenuItemLabel::create(Label::createWithTTF("SELECT\n", "fonts/comici.ttf", 30), CC_CALLBACK_1(Random::select, this));
-	button1->setPosition(visibleSize.width / 2, 370);
+	button1->setPosition(visibleSize.width / 2, 350);
 	auto button2 = MenuItemLabel::create(Label::createWithTTF("SELECT\n", "fonts/comici.ttf", 30), CC_CALLBACK_1(Random::select, this));
-	button2->setPosition(visibleSize.width / 4, 370);
+	button2->setPosition(visibleSize.width / 4, 350);
 	auto button3 = MenuItemLabel::create(Label::createWithTTF("SELECT\n", "fonts/comici.ttf", 30), CC_CALLBACK_1(Random::select, this));
-	button3->setPosition(visibleSize.width / 4 * 3, 370);
+	button3->setPosition(visibleSize.width / 4 * 3, 350);
 	button1->setColor(Color3B::BLACK);
 	button2->setColor(Color3B::BLACK);
 	button3->setColor(Color3B::BLACK);

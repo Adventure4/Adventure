@@ -414,16 +414,16 @@ void Adventure::loadObject(){
 
 	// 显示生命值/攻击力/经验值的图像
 	Sprite* label_life = Sprite::create("label_life.png");
-	label_life->setPosition(55, 64*6-10);
+	label_life->setPosition(55, 64*5 + 5);
 	addChild(label_life, 7);
 	Sprite* label_attack = Sprite::create("label_attack.png");
-	label_attack->setPosition(55, 64 * 5);
+	label_attack->setPosition(55, 64 * 4 + 15) ;
 	addChild(label_attack, 7);
 	Sprite* label_level = Sprite::create("label_level.png");
-	label_level->setPosition(55, 64 * 4 + 18);
+	label_level->setPosition(55, 64 * 3 + 33);
 	addChild(label_level, 7);
 	Sprite* label_exp = Sprite::create("label_exp.png");
-	label_exp->setPosition(55, 64 * 3 + 30);
+	label_exp->setPosition(55, 64 * 2 + 45);
 	addChild(label_exp, 7);
 	
 
